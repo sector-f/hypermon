@@ -3,22 +3,20 @@ extern crate serde_json;
 extern crate virt;
 extern crate clap;
 mod domain_state;
-mod info;
 
 use virt::connect::*;
-use virt::domain::*;
 use clap::{App, Arg};
 use std::process::exit;
-use info::*;
 use domain_state::*;
 
 #[derive(Serialize)]
 struct Domain {
     pub name: String,
     pub state: State,
-
-    #[serde(with = "DomainInfoDef")]
-    pub info: DomainInfo,
+    pub max_mem: u64,
+    pub memory: u64,
+    pub nr_virt_cpu: u32,
+    pub cpu_time: u64,
 }
 
 fn main() {
@@ -47,7 +45,15 @@ fn main() {
         let state = State::new(s);
         let info = domain.get_info().unwrap();
 
-        let domain = Domain { name, state, info };
+        let domain = Domain {
+            name: name,
+            state: state,
+            memory: info.memory,
+            max_mem: info.max_mem,
+            nr_virt_cpu: info.nr_virt_cpu,
+            cpu_time: info.cpu_time,
+        };
+
         list.push(domain);
     }
 
