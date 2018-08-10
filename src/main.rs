@@ -34,6 +34,10 @@ fn main() {
              .short("t")
              .long("table")
              .help("Output table instead of JSON"))
+        .arg(Arg::with_name("all")
+             .short("a")
+             .long("all")
+             .help("List all domains (Default: list currently running domains)"))
         .get_matches();
 
     let conn_uri = matches.value_of("connect").expect("Connection URI not found");
@@ -41,12 +45,14 @@ fn main() {
         Ok(c) => c,
         Err(_) => exit(1),
     };
-    let running = conn.list_all_domains(VIR_CONNECT_LIST_DOMAINS_ACTIVE).unwrap();
+
+    let selection = if matches.is_present("all") { 0 } else { VIR_CONNECT_LIST_DOMAINS_ACTIVE };
+    let vms = conn.list_all_domains(selection).unwrap();
 
     let is_table = matches.is_present("table");
     let mut list: Vec<Domain> = Vec::new();
 
-    for domain in running {
+    for domain in vms {
         let name = domain.get_name().unwrap();
         let (s, _) = domain.get_state().unwrap();
         let state = State::new(s);
