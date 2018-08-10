@@ -1,9 +1,11 @@
+#[macro_use] extern crate prettytable;
 #[macro_use] extern crate serde_derive;
 extern crate serde_json;
 extern crate virt;
 extern crate clap;
 mod domain_state;
 
+use prettytable::Table;
 use virt::connect::*;
 use clap::{App, Arg};
 use std::process::exit;
@@ -22,12 +24,16 @@ struct Domain {
 fn main() {
     let matches = App::new("hypermon")
         .arg(Arg::with_name("connect")
-        .short("c")
-        .long("connect")
-        .value_name("URI")
-        .help("Specify the libvirt connection URI")
-        .required(true)
-        .takes_value(true))
+            .short("c")
+            .long("connect")
+            .value_name("URI")
+            .help("Specify the libvirt connection URI")
+            .required(true)
+            .takes_value(true))
+        .arg(Arg::with_name("table")
+             .short("t")
+             .long("table")
+             .help("Output table instead of JSON"))
         .get_matches();
 
     let conn_uri = matches.value_of("connect").expect("Connection URI not found");
@@ -37,6 +43,7 @@ fn main() {
     };
     let running = conn.list_all_domains(VIR_CONNECT_LIST_DOMAINS_ACTIVE).unwrap();
 
+    let is_table = matches.is_present("table");
     let mut list: Vec<Domain> = Vec::new();
 
     for domain in running {
@@ -57,5 +64,17 @@ fn main() {
         list.push(domain);
     }
 
-    println!("{}", serde_json::to_string_pretty(&list).unwrap());
+    match is_table {
+        false => {
+            println!("{}", serde_json::to_string_pretty(&list).unwrap());
+        },
+        true => {
+            let mut table = Table::new();
+            table.add_row(row!["Name", "State", "Memory", "Max Memory", "Virt. CPUs", "CPU Time"]);
+            for domain in list {
+                table.add_row(row![domain.name, domain.state, domain.memory, domain.max_mem, domain.nr_virt_cpu, domain.cpu_time]);
+            }
+            table.printstd();
+        },
+    }
 }
