@@ -46,7 +46,7 @@ fn main() {
         Err(_) => exit(1),
     };
 
-    let selection = if matches.is_present("all") { VIR_CONNECT_LIST_DOMAINS_ACTIVE } else { 0 };
+    let selection = if matches.is_present("all") { 0 } else { VIR_CONNECT_LIST_DOMAINS_ACTIVE };
     let vms = conn.list_all_domains(selection).unwrap();
 
     let is_table = matches.is_present("table");
