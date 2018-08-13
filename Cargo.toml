@@ -7,6 +7,6 @@ authors = ["Adam <sector-f@users.noreply.github.com>"]
 serde = "1.0.71"
 serde_derive = "1.0.71"
 serde_json = "1.0.24"
-virt = "0.2.8"
+virt = { git = "https://github.com/sector-f/libvirt-rust.git", rev = "c8f5ab01429679aac23ff83c24145b90bb5566ac" }
 clap = "2.32.0"
 prettytable-rs = "0.7.0"
