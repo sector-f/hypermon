@@ -1,13 +1,14 @@
+extern crate new_libvirt;
+use new_libvirt::connect::*;
+use new_libvirt::domain::*;
+
 #[macro_use] extern crate prettytable;
 #[macro_use] extern crate serde_derive;
 extern crate serde_json;
-extern crate virt;
 extern crate clap;
 mod domain_state;
 
 use prettytable::Table;
-use virt::connect::*;
-use virt::domain::*;
 use clap::{App, Arg};
 use std::process::exit;
 use domain_state::*;
@@ -57,7 +58,7 @@ fn main() {
         Err(_) => exit(1),
     };
 
-    let selection = if matches.is_present("all") { 0 } else { VIR_CONNECT_LIST_DOMAINS_ACTIVE };
+    let selection = if matches.is_present("all") { &[ListAllDomainsFlags::All] } else { &[ListAllDomainsFlags::Active] };
     let vms = conn.list_all_domains(selection).unwrap();
 
     let is_table = matches.is_present("table");
@@ -66,10 +67,10 @@ fn main() {
     for domain in vms {
         let name = domain.get_name().unwrap();
         let (s, _) = domain.get_state().unwrap();
-        let state = State::new(s);
+        let state = State::new((s as u8).into());
         let info = domain.get_info().unwrap();
 
-        let ifaces = match domain.interface_addresses(VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE) {
+        let ifaces = match domain.interface_addresses(InterfaceAddressSource::Lease) {
             Ok(interfaces) => {
                 let mut iface_stats: Vec<IfaceStats> = Vec::new();
 
@@ -120,7 +121,7 @@ fn main() {
                 let tx = if let Some(ifaces) = &domain.ifaces { ifaces.iter().fold(0, |acc, iface| acc + iface.tx_bytes).to_string() } else { "".to_string() };
 
                 table.add_row(row![
-                    domain.name, 
+                    domain.name,
                     domain.state,
                     domain.memory,
                     domain.max_mem,
