@@ -145,6 +145,7 @@ name = "hypermon"
 version = "0.1.0"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libvirt-sys 0.1.0 (git+https://github.com/sector-f/new-libvirt-sys.git)",
  "new-libvirt 0.1.0 (git+https://github.com/sector-f/new-libvirt-rs.git)",
  "prettytable-rs 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
