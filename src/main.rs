@@ -2,16 +2,22 @@ extern crate new_libvirt;
 use new_libvirt::connect::*;
 use new_libvirt::domain::*;
 
+extern crate libvirt_sys;
+
 #[macro_use] extern crate prettytable;
 #[macro_use] extern crate serde_derive;
 extern crate serde_json;
 extern crate clap;
 mod domain_state;
+mod callback;
 
 use prettytable::Table;
 use clap::{App, Arg};
+use std::ptr;
+use std::os::raw::c_void;
 use std::process::exit;
 use domain_state::*;
+use callback::*;
 
 #[derive(Serialize)]
 struct Domain {
@@ -51,6 +57,10 @@ fn main() {
              .long("all")
              .help("List all domains (Default: list currently running domains)"))
         .get_matches();
+
+    unsafe {
+        libvirt_sys::virSetErrorFunc(ptr::null::<c_void>() as *mut c_void, Some(do_nothing));
+    }
 
     let conn_uri = matches.value_of("connect").expect("Connection URI not found");
     let conn = match Connect::open(&conn_uri) {
