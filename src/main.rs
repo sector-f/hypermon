@@ -20,7 +20,7 @@ use domain_state::*;
 use callback::*;
 
 #[derive(Serialize)]
-struct Domain {
+struct DomainOutput {
     pub name: String,
     pub state: State,
     pub max_mem: u64,
@@ -57,7 +57,13 @@ fn main() {
              .short("a")
              .long("all")
              .help("List all domains (Default: list currently running domains)"))
+        .arg(Arg::with_name("verbose")
+             .short("v")
+             .long("verbose")
+             .help("Print error reporting to stderr"))
         .get_matches();
+
+    let verbose = matches.is_present("verbose");
 
     unsafe {
         libvirt_sys::virSetErrorFunc(ptr::null::<c_void>() as *mut c_void, Some(do_nothing));
@@ -70,16 +76,37 @@ fn main() {
     };
 
     let selection = if matches.is_present("all") { &[ListAllDomainsFlags::All] } else { &[ListAllDomainsFlags::Active] };
-    let vms = conn.list_all_domains(selection).unwrap();
+
+    let vms = match conn.list_all_domains(selection) {
+        Ok(vms) => vms,
+        Err(e) => {
+            if verbose {
+                eprintln!("virConnectListAllDomains failed: {}; falling back to legacy mode", e);
+            }
+
+            let mut domains = Vec::new();
+
+            for id in conn.list_active_domains().expect("Legacy mode failed (virConnectListDomains) {") {
+                domains.push(Domain::lookup_by_id(&conn, id).unwrap());
+            }
+
+            if matches.is_present("all") {
+                for name in conn.list_defined_domains().expect("Legacy mode failed (virConnectListDefinedDomains)") {
+                    domains.push(Domain::lookup_by_name(&conn, &name).unwrap());
+                }
+            }
+
+            domains
+        },
+    };
 
     let is_table = matches.is_present("table");
-    let mut list: Vec<Domain> = Vec::new();
+    let mut list: Vec<DomainOutput> = Vec::new();
 
     for domain in vms {
         let name = domain.get_name().unwrap();
-        let (s, _) = domain.get_state().unwrap();
-        let state = State::new((s as u8).into());
         let info = domain.get_info().unwrap();
+        let state = State::new((info.state as u8).into());
 
         let ifaces = match domain.interface_addresses(InterfaceAddressSource::Lease) {
             Ok(interfaces) => {
@@ -108,7 +135,7 @@ fn main() {
             },
         };
 
-        let domain = Domain {
+        let domain = DomainOutput {
             name: name,
             state: state,
             memory: info.memory,
