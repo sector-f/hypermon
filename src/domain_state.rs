@@ -1,4 +1,3 @@
-use virt::domain::*;
 use std::fmt;
 
 #[derive(Serialize)]
@@ -17,14 +16,14 @@ pub enum State {
 impl State {
     pub fn new(s: u32) -> Self {
         match s {
-            VIR_DOMAIN_NOSTATE => State::NoState,
-            VIR_DOMAIN_RUNNING => State::Running,
-            VIR_DOMAIN_BLOCKED => State::Blocked,
-            VIR_DOMAIN_PAUSED => State::Paused,
-            VIR_DOMAIN_SHUTDOWN => State::Shutdown,
-            VIR_DOMAIN_SHUTOFF => State::Shutoff,
-            VIR_DOMAIN_CRASHED => State::Crashed,
-            VIR_DOMAIN_PMSUSPENDED => State::PmSuspended,
+            0 => State::NoState,
+            1 => State::Running,
+            2 => State::Blocked,
+            3 => State::Paused,
+            4 => State::Shutdown,
+            5 => State::Shutoff,
+            6 => State::Crashed,
+            7 => State::PmSuspended,
             _ => State::Unknown,
         }
     }
