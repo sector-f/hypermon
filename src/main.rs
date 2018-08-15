@@ -25,7 +25,7 @@ struct Domain {
     pub state: State,
     pub max_mem: u64,
     pub memory: u64,
-    pub nr_virt_cpu: u32,
+    pub num_virt_cpus: u32,
     pub cpu_time: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ifaces: Option<Vec<IfaceStats>>,
@@ -34,6 +34,7 @@ struct Domain {
 #[derive(Serialize)]
 struct IfaceStats {
     name: String,
+    mac: String,
     addresses: Vec<String>,
     rx_bytes: i64,
     tx_bytes: i64,
@@ -93,6 +94,7 @@ fn main() {
                     iface_stats.push(
                         IfaceStats {
                             name: interface.name.to_owned(),
+                            mac: interface.hwaddr.to_owned(),
                             addresses: addresses,
                             rx_bytes: stats.rx_bytes,
                             tx_bytes: stats.tx_bytes,
@@ -111,7 +113,7 @@ fn main() {
             state: state,
             memory: info.memory,
             max_mem: info.max_mem,
-            nr_virt_cpu: info.nr_virt_cpu,
+            num_virt_cpus: info.nr_virt_cpu,
             cpu_time: info.cpu_time,
             ifaces: ifaces,
         };
@@ -125,8 +127,9 @@ fn main() {
         },
         true => {
             let mut table = Table::new();
-            table.add_row(row!["Name", "State", "Memory", "Max Memory", "Virt. CPUs", "CPU Time", "Bytes Rx", "Bytes Tx"]);
+            table.add_row(row!["Name", "State", "Memory", "Max Memory", "Virt. CPUs", "CPU Time", "Interfaces", "Bytes Rx", "Bytes Tx"]);
             for domain in list {
+                let num_ifaces = if let Some(ifaces) = &domain.ifaces { ifaces.len().to_string() } else { "".to_string() };
                 let rx = if let Some(ifaces) = &domain.ifaces { ifaces.iter().fold(0, |acc, iface| acc + iface.rx_bytes).to_string() } else { "".to_string() };
                 let tx = if let Some(ifaces) = &domain.ifaces { ifaces.iter().fold(0, |acc, iface| acc + iface.tx_bytes).to_string() } else { "".to_string() };
 
@@ -135,8 +138,9 @@ fn main() {
                     domain.state,
                     domain.memory,
                     domain.max_mem,
-                    domain.nr_virt_cpu,
+                    domain.num_virt_cpus,
                     domain.cpu_time,
+                    num_ifaces,
                     rx,
                     tx,
                 ]);
