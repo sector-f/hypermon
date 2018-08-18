@@ -1,6 +1,7 @@
 extern crate new_libvirt;
 use new_libvirt::connect::*;
 use new_libvirt::domain::*;
+use new_libvirt::error::*;
 
 extern crate libvirt_sys;
 
@@ -9,15 +10,11 @@ extern crate libvirt_sys;
 extern crate serde_json;
 extern crate clap;
 mod domain_state;
-mod callback;
 
 use prettytable::Table;
 use clap::{App, Arg};
-use std::ptr;
-use std::os::raw::c_void;
 use std::process::exit;
 use domain_state::*;
-use callback::*;
 
 #[derive(Serialize)]
 struct DomainOutput {
@@ -39,6 +36,8 @@ struct IfaceStats {
     rx_bytes: i64,
     tx_bytes: i64,
 }
+
+fn ignore_error(_e: Error) {}
 
 fn main() {
     let matches = App::new("hypermon")
@@ -65,9 +64,7 @@ fn main() {
 
     let verbose = matches.is_present("verbose");
 
-    unsafe {
-        libvirt_sys::virSetErrorFunc(ptr::null::<c_void>() as *mut c_void, Some(do_nothing));
-    }
+    set_error_func(ignore_error);
 
     let conn_uri = matches.value_of("connect").expect("Connection URI not found");
     let conn = match Connect::open(&conn_uri) {
