@@ -3,8 +3,6 @@ use new_libvirt::connect::*;
 use new_libvirt::domain::*;
 use new_libvirt::error::*;
 
-extern crate libvirt_sys;
-
 #[macro_use] extern crate prettytable;
 #[macro_use] extern crate serde_derive;
 extern crate serde_json;
