@@ -1,6 +1,7 @@
 extern crate new_libvirt;
 use new_libvirt::connect::*;
 use new_libvirt::domain::*;
+use new_libvirt::domain::flags::*;
 use new_libvirt::error::*;
 
 #[macro_use] extern crate prettytable;
@@ -70,7 +71,7 @@ fn main() {
         Err(_) => exit(1),
     };
 
-    let selection = if matches.is_present("all") { &[ListAllDomainsFlags::All] } else { &[ListAllDomainsFlags::Active] };
+    let selection = if matches.is_present("all") { None } else { Some(ListAllDomainsFlags::ACTIVE) };
 
     let vms = match conn.list_all_domains(selection) {
         Ok(vms) => vms,

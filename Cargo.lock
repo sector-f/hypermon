@@ -209,8 +209,9 @@ dependencies = [
 [[package]]
 name = "new-libvirt"
 version = "0.1.0"
-source = "git+https://github.com/sector-f/new-libvirt-rs.git#68e03a44229bf59b830755f533f94f3b11a439f0"
+source = "git+https://github.com/sector-f/new-libvirt-rs.git#805d7eae7efb9265328e22c622ec1ed4b2fae2c5"
 dependencies = [
+ "bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "libvirt-sys 0.1.0 (git+https://github.com/sector-f/new-libvirt-sys.git)",
 ]
